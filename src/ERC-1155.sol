@@ -82,6 +82,10 @@ contract MyToken is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
         emit Minted(msg.sender, id, amount);
     }
 
+    function withdrawBalance() public onlyOwner {
+        payable(owner()).transfer(address(this).balance);
+    }
+
     function mintBatch(
         address to,
         uint256[] memory ids,
