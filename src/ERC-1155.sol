@@ -6,8 +6,16 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {ERC1155Pausable} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
 import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract MyToken is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
+contract MyToken is
+    ERC1155,
+    Ownable,
+    ERC1155Pausable,
+    ERC1155Supply,
+    ReentrancyGuard
+    
+{
     constructor()
         ERC1155("ipfs://Qmaa6TuP2s9pSKczHF4rwWhTKUdygrrDs8RmYYqCjP3Hye/")
         Ownable(msg.sender)
@@ -21,6 +29,7 @@ contract MyToken is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
     uint256 WhitelistMintLimit = 5;
 
     event Minted(address indexed account, uint256 id, uint256 amount);
+    event Withdraw(address indexed account, uint256 amount);
 
     mapping(address => bool) public whitelist;
 
@@ -48,16 +57,16 @@ contract MyToken is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
         return (WhitelistMintOn, PublicMintOn);
     }
 
-    function addToWhitelist(address _user) onlyOWner{
+    function addToWhitelist(address _user) onlyOwner {
         whitelist[_user] = true;
     }
 
-    function removeFromWhitelist(address _user) onlyOWner {
+    function removeFromWhitelist(address _user) onlyOwner {
         whitelist[_user] = false;
     }
 
-    function isWhitelisted(address _user) public view returns(bool) {
-        returns whitelist[_user]
+    function isWhitelisted(address _user) public view returns (bool) {
+        return whitelist[_user];
     }
 
     function publicMint(uint256 id, uint256 amount) public payable {
@@ -70,7 +79,7 @@ contract MyToken is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
     }
 
     function whitelistMint(uint256 id, uint256 amount) public payable {
-        require(whitelist[msg.sender], "Not Whitelisted")
+        require(whitelist[msg.sender], "Not Whitelisted");
         require(WhitelistMintOn, "Whitelist Mint is not available");
         require(
             msg.value == WhitelistMintPrice * amount,
@@ -82,8 +91,14 @@ contract MyToken is ERC1155, Ownable, ERC1155Pausable, ERC1155Supply {
         emit Minted(msg.sender, id, amount);
     }
 
-    function withdrawBalance() public onlyOwner {
-        payable(owner()).transfer(address(this).balance);
+    function withdrawBalance()public onlyOwner nonReentrant {
+    uint256 balance = address(this).balance;
+    require(balance > 0, "No funds available");
+
+    (bool success, ) = payable(owner()).call{value: balance}("");  // ✅ INTERACTION: Transfers funds
+    require(success, "Withdrawal failed");  // ✅ EFFECT: Ensures success
+
+    emit Withdraw(owner(), balance);
     }
 
     function mintBatch(
