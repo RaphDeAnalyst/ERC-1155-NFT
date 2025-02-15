@@ -33,45 +33,18 @@ An ERC-1155 smart contract for minting NFTs with whitelist functionality. This c
       forge install OpenZeppelin/openzeppelin-contracts
       forge remappings > remappings.txt
       
-    * Hardhat:
-     ```bash
-       npm install --save-dev hardhat
-       npm install @openzeppelin/contracts
-     ```    
-   * Truffle:
-      ```bash
-      npm install -g truffle
-      npm install @openzeppelin/contracts
-      ```
-   
-4. Compile the contract:
-   * Foundry:
+3. Compile the contract:
      ```
      forge build
      ```
-   * Hardhat:
-    ```
-    npx hardhat compile
-    ```
-   * Truffle:
-    ```
-    truffle compile
-    
+   
 ### Deployment
 #### Steps
 1. Update the constructor in MyToken.sol with your IPFS URI.
-2. Deploy the contract using your preferred tool:
-   * Foundry:
+2. Deploy the contract:
      ```
      forge create --rpc-url <YOUR_RPC_URL> --private-key <YOUR_PRIVATE_KEY> src/MyToken.sol:MyToken --constructor-args "ipfs://Qmaa6TuP2s9pSKczHF4rwWhTKUdygrrDs8RmYYqCjP3Hye/"
-    * Hardhat:
-      Create a deployment script (scripts/deploy.js) and run:
-      ```
-      npx hardhat run scripts/deploy.js --network <NETWORK_NAME>
-    *Truffle:
-      Update truffle-config.js and run:
-      ```
-      truffle migrate --network <NETWORK_NAME>
+
 ### Usage
 #### Whitelist Minting
 1. Add addresses to the whitelist using the addToWhitelist function.
@@ -86,10 +59,9 @@ An ERC-1155 smart contract for minting NFTs with whitelist functionality. This c
 1. The contract owner can withdraw funds using the withdrawBalance function.
 
 #### Testing
-1. Run tests using your preferred tool:
-   * Foundry: forge test
-   * Hardhat: npx hardhat test
-   * Truffle: truffle test
+   ```
+   forge test
+   ```
 
 #### Contract Details
    * Token Standard: ERC-1155
