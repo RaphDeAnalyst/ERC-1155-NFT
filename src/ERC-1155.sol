@@ -14,7 +14,6 @@ contract MyToken is
     ERC1155Pausable,
     ERC1155Supply,
     ReentrancyGuard
-    
 {
     constructor()
         ERC1155("ipfs://Qmaa6TuP2s9pSKczHF4rwWhTKUdygrrDs8RmYYqCjP3Hye/")
@@ -32,6 +31,8 @@ contract MyToken is
     event Withdraw(address indexed account, uint256 amount);
 
     mapping(address => bool) public whitelist;
+    mapping(address => uint256) public publicMintPerUser;
+    mapping(address => uint256) public whitelistMintPerUser;
 
     function setURI(string memory newuri) public onlyOwner {
         _setURI(newuri);
@@ -73,6 +74,10 @@ contract MyToken is
         require(PublicMintOn, "Public Mint is not available");
         require(msg.value == PublicMintPrice * amount, "Incorrect amount sent");
         require(amount <= PublicMintLimit, "Exceeds public mint limit");
+        require(
+            publicMintPerUser[msg.sender] + amount <= PublicMintLimit,
+            "Exceeds public mint limit"
+        );
 
         _mint(msg.sender, id, amount, "");
         emit Minted(msg.sender, id, amount);
@@ -86,19 +91,23 @@ contract MyToken is
             "Incorrect amount sent"
         );
         require(amount <= WhitelistMintLimit, "Exceeds public mint limit");
+        require(
+            whitelistMintPerUser[msg.sender] + amount <= WhitelistMintLimit,
+            "Exceeds public mint limit"
+        );
 
         _mint(msg.sender, id, amount, "");
         emit Minted(msg.sender, id, amount);
     }
 
-    function withdrawBalance()public onlyOwner nonReentrant {
-    uint256 balance = address(this).balance;
-    require(balance > 0, "No funds available");
+    function withdrawBalance() public onlyOwner nonReentrant {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds available");
 
-    (bool success, ) = payable(owner()).call{value: balance}("");  // ✅ INTERACTION: Transfers funds
-    require(success, "Withdrawal failed");  // ✅ EFFECT: Ensures success
+        (bool success, ) = payable(owner()).call{value: balance}(""); // ✅ INTERACTION: Transfers funds
+        require(success, "Withdrawal failed"); // ✅ EFFECT: Ensures success
 
-    emit Withdraw(owner(), balance);
+        emit Withdraw(owner(), balance);
     }
 
     function mintBatch(
